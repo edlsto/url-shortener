@@ -5,6 +5,7 @@ var mongo = require("mongodb");
 var mongoose = require("mongoose");
 require("dotenv").config();
 var bodyParser = require("body-parser");
+var dns = require("dns");
 
 var cors = require("cors");
 
@@ -46,18 +47,27 @@ app.get("/api/shorturl/:shorturl", function (req, res) {
 
 app.post("/api/shorturl/new", (req, res) => {
   let url = req.body.url;
-  Url.find()
-    .sort({ shorturl: -1 })
-    .limit(1)
-    .exec(function (err, data) {
-      if (err) return console.log(err);
-      let newRecord;
-      newRecord = new Url({ url: url, shorturl: data[0].shorturl + 1 });
-      newRecord.save(function (error, data) {
-        if (error) return error;
-      });
-      res.json({ url: url, shorturl: data[0].shorturl + 1 });
-    });
+  var urlNoProtocol = url.replace(/^https?\:\/\//i, "");
+  console.log(url);
+  dns.lookup(urlNoProtocol, function onLookup(err, addresses, family) {
+    console.log(addresses);
+    if (!addresses) {
+      res.json({ error: "Address not valid" });
+    } else {
+      Url.findOne()
+        .sort({ shorturl: -1 })
+        .limit(1)
+        .exec(function (err, data) {
+          if (err) return console.log(err);
+          let newRecord;
+          newRecord = new Url({ url: url, shorturl: data.shorturl + 1 });
+          newRecord.save(function (error, data) {
+            if (error) return error;
+          });
+          res.json({ url: url, shorturl: data.shorturl + 1 });
+        });
+    }
+  });
 });
 
 app.listen(port, function () {
