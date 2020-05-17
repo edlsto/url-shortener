@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGO_URI, {
 var Schema = mongoose.Schema;
 
 var urlSchema = new Schema({
-  url: String
+  url: String,
   shorturl: Number,
 });
 
