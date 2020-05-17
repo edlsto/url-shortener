@@ -6,11 +6,8 @@ var mongoose = require("mongoose");
 require("dotenv").config();
 var bodyParser = require("body-parser");
 var dns = require("dns");
-
 var cors = require("cors");
-
 var app = express();
-
 var port = process.env.PORT || 3000;
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -41,16 +38,14 @@ app.get("/api/shorturl/:shorturl", function (req, res) {
   const shorturl = req.params.shorturl;
   let record = Url.findOne({ shorturl: shorturl }, function (error, data) {
     if (error) return error;
-    res.redirect(data.url);
+    res.redirect("http://" + data.url);
   });
 });
 
 app.post("/api/shorturl/new", (req, res) => {
   let url = req.body.url;
   var urlNoProtocol = url.replace(/^https?\:\/\//i, "");
-  console.log(url);
   dns.lookup(urlNoProtocol, function onLookup(err, addresses, family) {
-    console.log(addresses);
     if (!addresses) {
       res.json({ error: "Address not valid" });
     } else {
@@ -60,11 +55,14 @@ app.post("/api/shorturl/new", (req, res) => {
         .exec(function (err, data) {
           if (err) return console.log(err);
           let newRecord;
-          newRecord = new Url({ url: url, shorturl: data.shorturl + 1 });
+          newRecord = new Url({
+            url: urlNoProtocol,
+            shorturl: data.shorturl + 1,
+          });
           newRecord.save(function (error, data) {
             if (error) return error;
           });
-          res.json({ url: url, shorturl: data.shorturl + 1 });
+          res.json({ url: urlNoProtocol, shorturl: data.shorturl + 1 });
         });
     }
   });
