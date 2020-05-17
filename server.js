@@ -20,13 +20,11 @@ mongoose.connect(process.env.MONGO_URI, {
 var Schema = mongoose.Schema;
 
 var urlSchema = new Schema({
-  url: String, // String is shorthand for {type: String}
+  url: String
   shorturl: Number,
 });
 
 var Url = mongoose.model("Url", urlSchema);
-
-// mongoose.connect(process.env.DB_URI);
 
 app.use(cors());
 
