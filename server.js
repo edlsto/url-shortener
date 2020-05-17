@@ -43,17 +43,28 @@ app.get("/", function (req, res) {
 });
 
 // your first API endpoint...
-app.get("/api/shorturl/:id", function (req, res) {
-  res.json({ greeting: "hello API" });
+app.get("/api/shorturl/:shorturl", function (req, res) {
+  const shorturl = req.params.shorturl;
+  let record = Url.findOne({ shorturl: shorturl }, function (error, data) {
+    if (error) return error;
+    res.redirect(data.url);
+  });
 });
 
 app.post("/api/shorturl/new", (req, res) => {
   let url = req.body.url;
-  let newRecord = new Url({ url: url, shorturl: Date.now() });
-  newRecord.save(function (error, data) {
-    if (error) return error;
-  });
-  res.json({ url: url });
+  Url.find()
+    .sort({ shorturl: -1 })
+    .limit(1)
+    .exec(function (err, data) {
+      if (err) return console.log(err);
+      let newRecord;
+      newRecord = new Url({ url: url, shorturl: data[0].shorturl + 1 });
+      newRecord.save(function (error, data) {
+        if (error) return error;
+      });
+      res.json({ url: url, shorturl: data[0].shorturl + 1 });
+    });
 });
 
 app.listen(port, function () {
